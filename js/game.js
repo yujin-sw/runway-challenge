@@ -2,6 +2,7 @@
 const state = {
   situation: null,
   look: { top: null, bottom: null, shoes: null, outer: null, acc: null },
+  gender: 'f',
   category: 'top',
   verdict: null,     // AI 평가 결과
   round: 0,          // 이번 세션에 AI를 부른 횟수
@@ -53,7 +54,7 @@ function renderSummary() {
     .filter(([, v]) => v)
     .map(([k, v]) => `<span class="chip">${CLOSET[k].label}: ${v.emoji} ${v.name}</span>`);
   els.summary.innerHTML = chips.length ? chips.join('') : '<span class="chip">아직 고른 옷이 없어요</span>';
-  els.stage.innerHTML = renderAvatar(state.look);
+  els.stage.innerHTML = renderAvatar({ ...state.look, gender: state.gender });
   els.roundInfo.textContent = `AI 평가 ${state.round}/${MAX_ROUNDS}회 사용`;
 }
 
@@ -79,6 +80,14 @@ els.items.addEventListener('click', (e) => {
 });
 
 els.newBtn.addEventListener('click', pickSituation);
+
+document.querySelector('#gender').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-gender]');
+  if (!btn) return;
+  state.gender = btn.dataset.gender;
+  document.querySelectorAll('#gender [data-gender]').forEach((b) => b.setAttribute('aria-selected', b === btn));
+  renderSummary();
+});
 
 // 빈 입력 검사: 필수 카테고리가 비었는지
 function validateLook() {
@@ -133,7 +142,7 @@ els.submitBtn.addEventListener('click', async () => {
       author: (els.author.value.trim() || '익명').slice(0, 20),
       situation: state.situation.title,
       situationEmoji: state.situation.emoji,
-      look: Object.fromEntries(Object.entries(state.look).map(([k, v]) => [k, v ? { emoji: v.emoji, name: v.name, color: v.color || null, kind: v.kind || null } : null])),
+      look: { gender: state.gender, ...Object.fromEntries(Object.entries(state.look).map(([k, v]) => [k, v ? { emoji: v.emoji, name: v.name, color: v.color || null, kind: v.kind || null } : null])) },
       aiScore: state.verdict.score,
       aiComment: state.verdict.comment,
     };

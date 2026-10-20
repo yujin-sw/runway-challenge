@@ -124,6 +124,8 @@ button { font: inherit; cursor: pointer; }
 }
 .actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .8rem; }
 
+.gender { display: flex; gap: .4rem; margin-top: 1rem; }
+
 /* ---- 메시지 / 상태 ---- */
 .msg { border-radius: 10px; padding: .7rem .9rem; margin-top: .8rem; font-size: .95rem; }
 .msg--error { background: #ffe9ee; color: #8a1f3d; border: 1px solid #f3b5c6; }

@@ -50,7 +50,7 @@
     const r = (arr) => arr[Math.floor(Math.random() * arr.length)];
     document.getElementById('hero-stage').innerHTML = renderAvatar({
       top: r(CLOSET.top.items), bottom: r(CLOSET.bottom.items), shoes: r(CLOSET.shoes.items),
-      outer: Math.random() > .5 ? r(CLOSET.outer.items) : null, acc: r(CLOSET.acc.items),
+      outer: Math.random() > .5 ? r(CLOSET.outer.items) : null, acc: r(CLOSET.acc.items), gender: Math.random() > .5 ? 'm' : 'f',
     });
   </script>
 </body>

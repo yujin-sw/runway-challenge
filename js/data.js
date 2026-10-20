@@ -87,72 +87,77 @@ const SKIN = '#f3d2b3', SKIN_D = '#e2b893', HAIR = '#3a2a25', LINE = 'rgba(40,20
 const S = (c) => `stroke="${LINE}" stroke-width="1.2" stroke-linejoin="round" fill="${c}"`;
 
 // 아바타 실루엣: 각 부위를 kind에 따라 다르게 그립니다. (viewBox 0 0 120 240)
+// look.gender: 'f'(기본) | 'm'
 function renderAvatar(look) {
   const top = look.top || {}, bottom = look.bottom || {}, shoes = look.shoes || {}, outer = look.outer, acc = look.acc;
+  const male = look.gender === 'm';
   const tc = top.color || '#ddd', bc = bottom.color || '#ccc', sc = shoes.color || '#bbb';
   const tk = top.kind || 'tee', bk = bottom.kind || 'slacks', sk = shoes.kind || 'sneaker';
   const ok = outer?.kind, oc = outer?.color, ak = acc?.kind, ac = acc?.color;
   const longSleeve = ['shirt', 'knit', 'blouse', 'hoodie', 'sweat'].includes(tk);
-  const outerSleeve = ok && ok !== 'vest';
+
+  // --- 몸(피부): 옷보다 항상 좁게 ---
+  const body = `
+    <rect x="46" y="124" width="9" height="78" rx="4" fill="${SKIN}"/>
+    <rect x="65" y="124" width="9" height="78" rx="4" fill="${SKIN}"/>
+    <rect x="27" y="72" width="9" height="62" rx="4" fill="${SKIN}"/>
+    <rect x="84" y="72" width="9" height="62" rx="4" fill="${SKIN}"/>
+    <rect x="55" y="48" width="10" height="16" rx="4" fill="${SKIN_D}"/>`;
 
   // --- 하의 ---
   let bottomSvg = '';
-  const legs = (toY, w = 18, flare = 0) => `
-    <path d="M${40 - flare} ${toY} L42 126 H58 L${58 + 1} ${toY} Z" ${S(bc)}/>
-    <path d="M${62 - 1} ${toY} L62 126 H78 L${80 + flare} ${toY} Z" ${S(bc)}/>`;
-  if (bk === 'jeans') bottomSvg = legs(196) + `<path d="M46 130 V192 M74 130 V192" stroke="rgba(255,255,255,.35)" stroke-width="1" fill="none"/><rect x="42" y="126" width="36" height="5" fill="rgba(0,0,0,.15)"/>`;
-  else if (bk === 'slacks') bottomSvg = legs(198) + `<path d="M50 130 V194 M70 130 V194" stroke="rgba(255,255,255,.12)" stroke-width="1"/>`;
-  else if (bk === 'training') bottomSvg = legs(196, 18, 1) + `<path d="M44 132 V192 M76 132 V192" stroke="rgba(255,255,255,.7)" stroke-width="2"/>`;
-  else if (bk === 'wide') bottomSvg = legs(200, 18, 6);
+  const legs = (toY, flare = 0) => `
+    <path d="M${40 - flare} ${toY} L42 126 H58 L59 ${toY} Z" ${S(bc)}/>
+    <path d="M61 ${toY} L62 126 H78 L${80 + flare} ${toY} Z" ${S(bc)}/>`;
+  if (bk === 'jeans') bottomSvg = legs(198) + `<path d="M46 132 V194 M74 132 V194" stroke="rgba(255,255,255,.35)" stroke-width="1" fill="none"/><rect x="42" y="126" width="36" height="5" fill="rgba(0,0,0,.15)"/>`;
+  else if (bk === 'slacks') bottomSvg = legs(199) + `<path d="M50 130 V196 M70 130 V196" stroke="rgba(255,255,255,.12)" stroke-width="1"/>`;
+  else if (bk === 'training') bottomSvg = legs(198, 1) + `<path d="M44 132 V194 M76 132 V194" stroke="rgba(255,255,255,.7)" stroke-width="2"/>`;
+  else if (bk === 'wide') bottomSvg = legs(200, 6);
   else if (bk === 'shorts') bottomSvg = legs(160) + `<path d="M42 158 H59 M61 158 H78" stroke="rgba(0,0,0,.2)"/>`;
   else if (bk === 'skirt-long') bottomSvg = `<path d="M44 126 H76 L88 198 H32 Z" ${S(bc)}/><path d="M52 132 L46 196 M68 132 L74 196" stroke="rgba(0,0,0,.08)" fill="none"/>`;
   else if (bk === 'skirt-mini') bottomSvg = `<path d="M44 126 H76 L84 160 H36 Z" ${S(bc)}/><path d="M38 138 H82 M40 150 H80 M52 128 L48 158 M68 128 L72 158" stroke="rgba(255,255,255,.35)" stroke-width="1.4" fill="none"/>`;
 
-  // --- 신발 ---
-  let shoeSvg = '';
-  const L = 50, R = 70; // 발 중심
-  const foot = (cx, flip) => {
-    const d = flip ? -1 : 1;
-    if (sk === 'sneaker') return `<path d="M${cx - 9} 198 V206 Q${cx - 9} 212 ${cx - 3} 212 H${cx + 12 * d} Q${cx + 14 * d} 212 ${cx + 13 * d} 206 L${cx + 9} 198 Z" ${S(sc)}/><path d="M${cx - 9} 208 H${cx + 13 * d}" stroke="#fff" stroke-width="2.5"/><path d="M${cx - 5} 201 H${cx + 3}" stroke="rgba(0,0,0,.25)"/>`;
-    if (sk === 'loafer') return `<path d="M${cx - 9} 199 V208 Q${cx - 9} 212 ${cx - 4} 212 H${cx + 12 * d} Q${cx + 15 * d} 212 ${cx + 13 * d} 207 L${cx + 9} 199 Z" ${S(sc)}/><path d="M${cx - 6} 203 H${cx + 6}" stroke="rgba(255,255,255,.4)" stroke-width="2"/>`;
-    if (sk === 'heel') return `<path d="M${cx - 8} 199 L${cx - 8} 206 L${cx + 14 * d} 212 L${cx + 9} 199 Z" ${S(sc)}/><path d="M${cx - 7} 205 L${cx - 8} 213" stroke="${sc}" stroke-width="2.5"/>`;
-    if (sk === 'hiking') return `<path d="M${cx - 10} 192 V207 Q${cx - 10} 213 ${cx - 4} 213 H${cx + 13 * d} Q${cx + 16 * d} 213 ${cx + 14 * d} 207 L${cx + 10} 199 V192 Z" ${S(sc)}/><path d="M${cx - 10} 209 H${cx + 15 * d}" stroke="#2a2420" stroke-width="3"/><path d="M${cx - 6} 195 H${cx + 6} M${cx - 6} 199 H${cx + 6} M${cx - 6} 203 H${cx + 6}" stroke="rgba(255,255,255,.5)"/>`;
-    if (sk === 'slipper') return `<path d="M${cx - 9} 206 H${cx + 13 * d} Q${cx + 16 * d} 206 ${cx + 15 * d} 211 H${cx - 9} Z" ${S(sc)}/><path d="M${cx - 7} 205 Q${cx + 2} 196 ${cx + 11 * d} 205" stroke="${sc}" stroke-width="3" fill="none"/>`;
-    if (sk === 'boots') return `<path d="M${cx - 9} 150 V207 Q${cx - 9} 213 ${cx - 3} 213 H${cx + 13 * d} Q${cx + 16 * d} 213 ${cx + 14 * d} 207 L${cx + 9} 199 V150 Z" ${S(sc)}/><path d="M${cx - 9} 209 H${cx + 15 * d}" stroke="rgba(0,0,0,.4)" stroke-width="2.5"/><path d="M${cx - 9} 154 H${cx + 9}" stroke="rgba(255,255,255,.2)"/>`;
+  // --- 신발: 오른발만 그리고 왼발은 거울로 뒤집음 ---
+  const foot = () => {
+    const cx = 69.5; // 오른발 중심
+    if (sk === 'sneaker') return `<path d="M${cx - 6} 198 V206 Q${cx - 6} 212 ${cx - 1} 212 H${cx + 13} Q${cx + 16} 212 ${cx + 14} 206 L${cx + 6} 198 Z" ${S(sc)}/><path d="M${cx - 6} 208 H${cx + 15}" stroke="#fff" stroke-width="2.5"/><path d="M${cx - 3} 201 H${cx + 3}" stroke="rgba(0,0,0,.25)"/>`;
+    if (sk === 'loafer') return `<path d="M${cx - 6} 199 V208 Q${cx - 6} 212 ${cx - 1} 212 H${cx + 13} Q${cx + 16} 212 ${cx + 14} 207 L${cx + 6} 199 Z" ${S(sc)}/><path d="M${cx - 3} 203 H${cx + 6}" stroke="rgba(255,255,255,.4)" stroke-width="2"/>`;
+    if (sk === 'heel') return `<path d="M${cx - 6} 199 V206 L${cx + 15} 212 L${cx + 6} 199 Z" ${S(sc)}/><path d="M${cx - 5} 205 L${cx - 6} 213" stroke="${sc}" stroke-width="2.5"/>`;
+    if (sk === 'hiking') return `<path d="M${cx - 7} 192 V207 Q${cx - 7} 213 ${cx - 1} 213 H${cx + 14} Q${cx + 17} 213 ${cx + 15} 207 L${cx + 7} 199 V192 Z" ${S(sc)}/><path d="M${cx - 7} 209 H${cx + 16}" stroke="#2a2420" stroke-width="3"/><path d="M${cx - 4} 195 H${cx + 4} M${cx - 4} 199 H${cx + 4} M${cx - 4} 203 H${cx + 4}" stroke="rgba(255,255,255,.5)"/>`;
+    if (sk === 'slipper') return `<path d="M${cx - 6} 206 H${cx + 14} Q${cx + 17} 206 ${cx + 16} 211 H${cx - 6} Z" ${S(sc)}/><path d="M${cx - 4} 205 Q${cx + 4} 196 ${cx + 12} 205" stroke="${sc}" stroke-width="3" fill="none"/>`;
+    if (sk === 'boots') return `<path d="M${cx - 6} 150 V207 Q${cx - 6} 213 ${cx - 1} 213 H${cx + 14} Q${cx + 17} 213 ${cx + 15} 207 L${cx + 6} 199 V150 Z" ${S(sc)}/><path d="M${cx - 6} 209 H${cx + 16}" stroke="rgba(0,0,0,.4)" stroke-width="2.5"/><path d="M${cx - 6} 154 H${cx + 6}" stroke="rgba(255,255,255,.2)"/>`;
     return '';
   };
-  shoeSvg = foot(L, true) + foot(R, false);
+  const shoeSvg = foot() + `<g transform="translate(120 0) scale(-1 1)">${foot()}</g>`;
 
   // --- 상의 ---
-  const sleeveEnd = longSleeve ? 128 : 92;
   const sleeves = (c, end) => `
-    <path d="M40 66 L26 72 L22 ${end} H34 L38 92 Z" ${S(c)}/>
-    <path d="M80 66 L94 72 L98 ${end} H86 L82 92 Z" ${S(c)}/>`;
-  const armsSkin = `<rect x="23" y="70" width="11" height="64" rx="5" fill="${SKIN}"/><rect x="86" y="70" width="11" height="64" rx="5" fill="${SKIN}"/>`;
+    <path d="M40 64 L24 70 L22 ${end} H36 L38 92 Z" ${S(c)}/>
+    <path d="M80 64 L96 70 L98 ${end} H84 L82 92 Z" ${S(c)}/>`;
   let topSvg = '';
   const neckRound = `<path d="M52 62 Q60 70 68 62" stroke="${LINE}" fill="${SKIN}"/>`;
-  if (tk === 'tee') topSvg = sleeves(tc, 92) + `<path d="M40 64 Q60 70 80 64 L82 132 H38 Z" ${S(tc)}/>` + neckRound;
-  else if (tk === 'shirt') topSvg = sleeves(tc, 128) + `<path d="M40 64 Q60 70 80 64 L82 134 H38 Z" ${S(tc)}/><path d="M60 70 V132" stroke="rgba(0,0,0,.18)"/><path d="M52 62 L60 74 L68 62 L72 66 L60 80 L48 66 Z" ${S(tc)}/><circle cx="60" cy="90" r="1.3" fill="rgba(0,0,0,.3)"/><circle cx="60" cy="104" r="1.3" fill="rgba(0,0,0,.3)"/><circle cx="60" cy="118" r="1.3" fill="rgba(0,0,0,.3)"/>`;
-  else if (tk === 'knit') topSvg = sleeves(tc, 130) + `<path d="M38 64 Q60 70 82 64 L84 134 H36 Z" ${S(tc)}/><path d="M38 126 H82 M40 130 H80" stroke="rgba(0,0,0,.12)"/><path d="M46 80 V120 M53 80 V120 M60 80 V120 M67 80 V120 M74 80 V120" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/>` + neckRound;
-  else if (tk === 'blouse') topSvg = sleeves(tc, 128) + `<path d="M40 64 Q60 70 80 64 L84 136 H36 Z" ${S(tc)}/><path d="M50 62 L60 84 L70 62" stroke="${LINE}" fill="${SKIN}"/><path d="M60 84 V134" stroke="rgba(255,255,255,.18)"/>`;
-  else if (tk === 'hoodie') topSvg = `<path d="M44 58 Q60 46 76 58 L80 70 H40 Z" ${S(tc)}/>` + sleeves(tc, 130) + `<path d="M38 64 Q60 72 82 64 L84 136 H36 Z" ${S(tc)}/><path d="M55 72 V86 M65 72 V86" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/><path d="M44 108 H76 V130 H44 Z" fill="rgba(0,0,0,.12)"/>` + neckRound;
-  else if (tk === 'sweat') topSvg = sleeves(tc, 130) + `<path d="M38 64 Q60 70 82 64 L84 134 H36 Z" ${S(tc)}/><path d="M36 128 H84" stroke="rgba(0,0,0,.12)" stroke-width="3"/>` + neckRound;
-  else if (tk === 'crop') topSvg = `<path d="M42 64 Q60 70 78 64 L80 106 H40 Z" ${S(tc)}/><path d="M40 64 L30 70 L30 84 H38 Z M80 64 L90 70 L90 84 H82 Z" ${S(tc)}/>` + neckRound;
+  if (tk === 'tee') topSvg = sleeves(tc, 94) + `<path d="M40 64 Q60 70 80 64 L82 132 H38 Z" ${S(tc)}/>` + neckRound;
+  else if (tk === 'shirt') topSvg = sleeves(tc, 130) + `<path d="M40 64 Q60 70 80 64 L82 134 H38 Z" ${S(tc)}/><path d="M60 70 V132" stroke="rgba(0,0,0,.18)"/><path d="M52 62 L60 74 L68 62 L72 66 L60 80 L48 66 Z" ${S(tc)}/><circle cx="60" cy="90" r="1.3" fill="rgba(0,0,0,.3)"/><circle cx="60" cy="104" r="1.3" fill="rgba(0,0,0,.3)"/><circle cx="60" cy="118" r="1.3" fill="rgba(0,0,0,.3)"/>`;
+  else if (tk === 'knit') topSvg = sleeves(tc, 132) + `<path d="M38 64 Q60 70 82 64 L84 134 H36 Z" ${S(tc)}/><path d="M38 126 H82 M40 130 H80" stroke="rgba(0,0,0,.12)"/><path d="M46 80 V120 M53 80 V120 M60 80 V120 M67 80 V120 M74 80 V120" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/>` + neckRound;
+  else if (tk === 'blouse') topSvg = sleeves(tc, 130) + `<path d="M40 64 Q60 70 80 64 L84 136 H36 Z" ${S(tc)}/><path d="M50 62 L60 84 L70 62" stroke="${LINE}" fill="${SKIN}"/><path d="M60 84 V134" stroke="rgba(255,255,255,.18)"/>`;
+  else if (tk === 'hoodie') topSvg = `<path d="M44 58 Q60 46 76 58 L80 70 H40 Z" ${S(tc)}/>` + sleeves(tc, 132) + `<path d="M38 64 Q60 72 82 64 L84 136 H36 Z" ${S(tc)}/><path d="M55 72 V86 M65 72 V86" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/><path d="M44 108 H76 V130 H44 Z" fill="rgba(0,0,0,.12)"/>` + neckRound;
+  else if (tk === 'sweat') topSvg = sleeves(tc, 132) + `<path d="M38 64 Q60 70 82 64 L84 134 H36 Z" ${S(tc)}/><path d="M36 128 H84" stroke="rgba(0,0,0,.12)" stroke-width="3"/>` + neckRound;
+  else if (tk === 'crop') topSvg = `<path d="M40 64 L26 70 L26 86 H36 Z M80 64 L94 70 L94 86 H84 Z" ${S(tc)}/><path d="M42 64 Q60 70 78 64 L80 106 H40 Z" ${S(tc)}/>` + neckRound;
   else if (tk === 'dress') {
-    topSvg = sleeves(tc, 92) + `<path d="M40 64 Q60 70 80 64 L84 126 L92 196 H28 L36 126 Z" ${S(tc)}/>` + neckRound
+    topSvg = sleeves(tc, 94) + `<path d="M40 64 Q60 70 80 64 L84 126 L92 196 H28 L36 126 Z" ${S(tc)}/>` + neckRound
       + `<g fill="rgba(255,255,255,.55)"><circle cx="48" cy="100" r="2.2"/><circle cx="70" cy="112" r="2.2"/><circle cx="54" cy="150" r="2.2"/><circle cx="78" cy="166" r="2.2"/><circle cx="40" cy="180" r="2.2"/><circle cx="64" cy="184" r="2.2"/></g>`;
-    bottomSvg = ''; // 원피스는 하의를 덮음
+    bottomSvg = '';
   }
 
   // --- 아우터 ---
   let outerSvg = '';
-  const oS = (end) => `<path d="M40 64 L24 70 L20 ${end} H34 L38 90 Z" ${S(oc)}/><path d="M80 64 L96 70 L100 ${end} H86 L82 90 Z" ${S(oc)}/>`;
-  if (ok === 'trench') outerSvg = oS(132) + `<path d="M36 62 L50 64 L54 90 L52 176 H26 L30 90 Z" ${S(oc)}/><path d="M84 62 L70 64 L66 90 L68 176 H94 L90 90 Z" ${S(oc)}/><path d="M36 62 L54 90 L50 64 Z M84 62 L66 90 L70 64 Z" fill="rgba(0,0,0,.12)"/><rect x="28" y="118" width="64" height="6" fill="rgba(0,0,0,.25)"/><rect x="56" y="116" width="8" height="10" rx="1.5" fill="none" stroke="rgba(0,0,0,.5)"/>`;
-  else if (ok === 'leather') outerSvg = oS(130) + `<path d="M38 62 L52 64 L56 86 L55 130 H34 Z" ${S(oc)}/><path d="M82 62 L68 64 L64 86 L65 130 H86 Z" ${S(oc)}/><path d="M56 86 L54 128" stroke="#9aa0a8" stroke-width="2"/><path d="M38 62 L56 86 L52 64 Z M82 62 L64 86 L68 64 Z" fill="rgba(255,255,255,.08)"/><path d="M28 72 L40 76 M92 72 L80 76" stroke="rgba(255,255,255,.2)"/>`;
-  else if (ok === 'denim') outerSvg = oS(128) + `<path d="M38 62 L52 64 L55 86 L55 128 H34 Z" ${S(oc)}/><path d="M82 62 L68 64 L65 86 L65 128 H86 Z" ${S(oc)}/><rect x="40" y="94" width="12" height="12" rx="1" fill="none" stroke="rgba(255,255,255,.4)"/><rect x="68" y="94" width="12" height="12" rx="1" fill="none" stroke="rgba(255,255,255,.4)"/><circle cx="60" cy="92" r="1.5" fill="#d9c070"/><circle cx="60" cy="110" r="1.5" fill="#d9c070"/><path d="M38 62 L55 86 L52 64 Z M82 62 L65 86 L68 64 Z" fill="rgba(255,255,255,.12)"/>`;
+  const oS = (end) => `<path d="M40 64 L22 70 L20 ${end} H36 L38 90 Z" ${S(oc)}/><path d="M80 64 L98 70 L100 ${end} H84 L82 90 Z" ${S(oc)}/>`;
+  if (ok === 'trench') outerSvg = oS(134) + `<path d="M36 62 L50 64 L54 90 L52 176 H26 L30 90 Z" ${S(oc)}/><path d="M84 62 L70 64 L66 90 L68 176 H94 L90 90 Z" ${S(oc)}/><path d="M36 62 L54 90 L50 64 Z M84 62 L66 90 L70 64 Z" fill="rgba(0,0,0,.12)"/><rect x="28" y="118" width="64" height="6" fill="rgba(0,0,0,.25)"/><rect x="56" y="116" width="8" height="10" rx="1.5" fill="none" stroke="rgba(0,0,0,.5)"/>`;
+  else if (ok === 'leather') outerSvg = oS(132) + `<path d="M38 62 L52 64 L56 86 L55 130 H34 Z" ${S(oc)}/><path d="M82 62 L68 64 L64 86 L65 130 H86 Z" ${S(oc)}/><path d="M56 86 L54 128" stroke="#9aa0a8" stroke-width="2"/><path d="M38 62 L56 86 L52 64 Z M82 62 L64 86 L68 64 Z" fill="rgba(255,255,255,.08)"/>`;
+  else if (ok === 'denim') outerSvg = oS(130) + `<path d="M38 62 L52 64 L55 86 L55 128 H34 Z" ${S(oc)}/><path d="M82 62 L68 64 L65 86 L65 128 H86 Z" ${S(oc)}/><rect x="40" y="94" width="12" height="12" rx="1" fill="none" stroke="rgba(255,255,255,.4)"/><rect x="68" y="94" width="12" height="12" rx="1" fill="none" stroke="rgba(255,255,255,.4)"/><circle cx="60" cy="92" r="1.5" fill="#d9c070"/><circle cx="60" cy="110" r="1.5" fill="#d9c070"/><path d="M38 62 L55 86 L52 64 Z M82 62 L65 86 L68 64 Z" fill="rgba(255,255,255,.12)"/>`;
   else if (ok === 'vest') outerSvg = `<path d="M38 62 L54 66 V128 H34 Z" ${S(oc)}/><path d="M82 62 L66 66 V128 H86 Z" ${S(oc)}/><path d="M36 82 H54 M36 98 H54 M36 114 H54 M66 82 H84 M66 98 H84 M66 114 H84" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>`;
-  else if (ok === 'blazer') outerSvg = oS(130) + `<path d="M38 62 L52 64 L58 96 L56 142 H34 Z" ${S(oc)}/><path d="M82 62 L68 64 L62 96 L64 142 H86 Z" ${S(oc)}/><path d="M38 62 L58 96 L52 64 Z M82 62 L62 96 L68 64 Z" fill="rgba(255,255,255,.1)"/><circle cx="58" cy="112" r="1.6" fill="rgba(255,255,255,.5)"/>`;
-  else if (ok === 'raincoat') outerSvg = `<path d="M44 56 Q60 44 76 56 L80 68 H40 Z" ${S(oc)}/>` + oS(132) + `<path d="M36 62 L58 66 L58 170 H28 L32 90 Z" ${S(oc)}/><path d="M84 62 L62 66 L62 170 H92 L88 90 Z" ${S(oc)}/><circle cx="60" cy="90" r="1.8" fill="rgba(0,0,0,.3)"/><circle cx="60" cy="112" r="1.8" fill="rgba(0,0,0,.3)"/><circle cx="60" cy="134" r="1.8" fill="rgba(0,0,0,.3)"/>`;
+  else if (ok === 'blazer') outerSvg = oS(132) + `<path d="M38 62 L52 64 L58 96 L56 142 H34 Z" ${S(oc)}/><path d="M82 62 L68 64 L62 96 L64 142 H86 Z" ${S(oc)}/><path d="M38 62 L58 96 L52 64 Z M82 62 L62 96 L68 64 Z" fill="rgba(255,255,255,.1)"/><circle cx="58" cy="112" r="1.6" fill="rgba(255,255,255,.5)"/>`;
+  else if (ok === 'raincoat') outerSvg = `<path d="M44 56 Q60 44 76 56 L80 68 H40 Z" ${S(oc)}/>` + oS(134) + `<path d="M36 62 L58 66 L58 170 H28 L32 90 Z" ${S(oc)}/><path d="M84 62 L62 66 L62 170 H92 L88 90 Z" ${S(oc)}/><circle cx="60" cy="90" r="1.8" fill="rgba(0,0,0,.3)"/><circle cx="60" cy="112" r="1.8" fill="rgba(0,0,0,.3)"/><circle cx="60" cy="134" r="1.8" fill="rgba(0,0,0,.3)"/>`;
 
   // --- 소품 ---
   let accBack = '', accFront = '';
@@ -162,21 +167,20 @@ function renderAvatar(look) {
   if (ak === 'sunglasses') accFront += `<rect x="44" y="30" width="13" height="9" rx="3" fill="#1c1c1c"/><rect x="63" y="30" width="13" height="9" rx="3" fill="#1c1c1c"/><path d="M57 34 H63 M40 32 H44 M76 32 H80" stroke="#1c1c1c" stroke-width="1.5"/>`;
   if (ak === 'minibag') accFront += `<path d="M78 70 Q106 100 102 136" stroke="${ac}" stroke-width="2" fill="none"/><rect x="92" y="134" width="22" height="18" rx="4" ${S(ac)}/><path d="M92 141 H114" stroke="rgba(0,0,0,.25)"/><circle cx="103" cy="144" r="1.5" fill="#f1d27a"/>`;
   if (ak === 'scarf') accFront += `<path d="M44 58 Q60 72 76 58 L78 68 Q60 82 42 68 Z" ${S(ac)}/><path d="M68 66 L74 100 H66 L62 68 Z" ${S(ac)}/><path d="M66 90 H74" stroke="rgba(0,0,0,.2)"/>`;
-  if (ak === 'ring') accFront += `<circle cx="92" cy="130" r="2.2" fill="none" stroke="${ac}" stroke-width="1.6"/><path d="M92 124 L93 126 M96 128 L94 129" stroke="#fff" stroke-width="1.2"/>`;
+  if (ak === 'ring') accFront += `<circle cx="88.5" cy="132" r="2.2" fill="none" stroke="${ac}" stroke-width="1.6"/><path d="M88 126 L89 128 M92 130 L90 131" stroke="#fff" stroke-width="1.2"/>`;
 
-  // --- 몸 기본형 ---
-  const body = `
-    <rect x="44" y="124" width="12" height="78" rx="5" fill="${SKIN}"/>
-    <rect x="64" y="124" width="12" height="78" rx="5" fill="${SKIN}"/>
-    ${armsSkin}
-    <rect x="54" y="50" width="12" height="14" rx="4" fill="${SKIN_D}"/>`;
-  const headBack = `<path d="M36 36 Q36 10 60 10 Q84 10 84 36 L86 66 Q60 60 34 66 Z" fill="${HAIR}"/>`;
+  // --- 머리: 성별에 따라 헤어스타일만 다름 ---
+  const headBack = male
+    ? ''
+    : `<path d="M36 36 Q36 10 60 10 Q84 10 84 36 L86 66 Q60 60 34 66 Z" fill="${HAIR}"/>`;
+  const hairFront = male
+    ? `<path d="M40 32 Q40 10 60 10 Q80 10 80 32 Q76 20 62 22 Q50 20 40 32 Z" fill="${HAIR}"/><path d="M40 32 Q42 26 48 26 L44 36 Z M80 32 Q78 26 72 26 L76 36 Z" fill="${HAIR}"/>`
+    : `<path d="M40 30 Q44 12 60 12 Q76 12 80 30 Q72 22 60 26 Q50 22 40 30 Z" fill="${HAIR}"/>`;
   const head = `
     <ellipse cx="60" cy="34" rx="19" ry="21" fill="${SKIN}"/>
-    <path d="M40 30 Q44 12 60 12 Q76 12 80 30 Q72 22 60 26 Q50 22 40 30 Z" fill="${HAIR}"/>
-    <circle cx="52.5" cy="37" r="1.8" fill="#2b1d1a"/><circle cx="67.5" cy="37" r="1.8" fill="#2b1d1a"/>
-    <path d="M56 45 Q60 48 64 45" stroke="#b8705a" stroke-width="1.3" fill="none" stroke-linecap="round"/>
-    <ellipse cx="48" cy="42" rx="3.5" ry="2" fill="rgba(240,120,120,.35)"/><ellipse cx="72" cy="42" rx="3.5" ry="2" fill="rgba(240,120,120,.35)"/>`;
+    ${hairFront}
+    <circle cx="53" cy="38" r="1.6" fill="#2b1d1a"/><circle cx="67" cy="38" r="1.6" fill="#2b1d1a"/>
+    <path d="M57 46 Q60 48 63 46" stroke="#b8705a" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
 
   return `
   <svg class="avatar" viewBox="0 0 120 240" role="img" aria-label="코디 아바타">
