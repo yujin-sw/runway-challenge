@@ -1,7 +1,7 @@
 // ===== 백엔드 호출 공통 함수 =====
 // 모든 요청은 /api/... 로 보내고, 타임아웃·HTTP 오류를 한 곳에서 처리합니다.
 
-const API_TIMEOUT_MS = 15000;
+const API_TIMEOUT_MS = 30000;
 
 async function callApi(path, { method = 'GET', body } = {}) {
   const controller = new AbortController();

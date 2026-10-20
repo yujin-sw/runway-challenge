@@ -13,8 +13,8 @@ from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
 
-MODEL = "gemini-flash-latest"
-TIMEOUT_MS = 25000
+MODEL = "gemini-2.5-flash-lite"
+TIMEOUT_MS = 20000
 
 SYSTEM_PROMPT = """당신은 '오늘의 코디 챌린지' 게임의 스타일리스트 '마담 룩'입니다.
 말투는 짧고 유쾌하며, 칭찬과 지적을 한 문장씩 섞습니다.
