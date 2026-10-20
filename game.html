@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>코디하기 · 오늘의 코디 챌린지</title>
+  <meta name="description" content="상황에 맞는 코디를 완성하고 AI 스타일리스트의 평가를 받아 런웨이에 서는 패션 게임">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="nav__inner">
+      <a class="nav__brand" href="index.html">오늘의 코디 챌린지</a>
+      <nav><ul class="nav__links">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="game.html" aria-current="page">코디하기</a></li>
+        <li><a href="runway.html">런웨이</a></li>
+        <li><a href="ranking.html">랭킹</a></li>
+      </ul></nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <h1>코디하기</h1>
+    <p class="lead">상황에 맞게 옷장을 뒤져 보세요. 다 고르면 AI 스타일리스트가 봐 드려요.</p>
+
+    <div class="game">
+      <section>
+        <div class="panel situation">
+          <div class="situation__emoji" id="sit-emoji"></div>
+          <h2 id="sit-title"></h2>
+          <p id="sit-desc" class="lead"></p>
+          <button class="btn btn--small" id="new-btn">다른 상황 뽑기</button>
+        </div>
+
+        <div class="runway-floor" style="margin-top:1rem" id="stage"></div>
+        <div class="summary" id="summary"></div>
+
+        <div class="field">
+          <label for="look-name">코디 이름 (필수)</label>
+          <input id="look-name" maxlength="30" placeholder="예: 비 오는 날의 카라멜 트렌치">
+        </div>
+        <div class="field">
+          <label for="author">닉네임 (선택)</label>
+          <input id="author" maxlength="20" placeholder="익명">
+        </div>
+
+        <div class="actions">
+          <button class="btn btn--primary" id="eval-btn">AI 평가 받기</button>
+          <button class="btn" id="submit-btn" disabled>런웨이에 출전하기</button>
+        </div>
+        <small class="entry__meta" id="round-info"></small>
+        <div class="msg" id="msg" hidden></div>
+
+        <div class="panel verdict" id="verdict" hidden>
+          <div class="verdict__score"><span id="v-score"></span><small> / 100</small></div>
+          <div class="verdict__fit" id="v-fit"></div>
+          <blockquote id="v-comment"></blockquote>
+        </div>
+      </section>
+
+      <section class="panel closet">
+        <h2>옷장</h2>
+        <div class="closet__tabs" id="tabs" role="tablist"></div>
+        <div class="items" id="items"></div>
+      </section>
+    </div>
+  </main>
+  <footer class="footer">오늘의 코디 챌린지 · 옷장 속 아이템은 모두 이모지로 그렸어요</footer>
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

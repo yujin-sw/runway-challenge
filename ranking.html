@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>랭킹 · 오늘의 코디 챌린지</title>
+  <meta name="description" content="상황에 맞는 코디를 완성하고 AI 스타일리스트의 평가를 받아 런웨이에 서는 패션 게임">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="nav__inner">
+      <a class="nav__brand" href="index.html">오늘의 코디 챌린지</a>
+      <nav><ul class="nav__links">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="game.html">코디하기</a></li>
+        <li><a href="runway.html">런웨이</a></li>
+        <li><a href="ranking.html" aria-current="page">랭킹</a></li>
+      </ul></nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <h1>랭킹</h1>
+    <p class="lead">AI 점수와 방문자 별점을 합산한 종합 점수 순위예요. 상위 20개까지 보여줘요.</p>
+    <div class="msg" id="msg" hidden></div>
+    <div class="table-scroll">
+      <table class="rank-table">
+        <thead><tr><th>순위</th><th>코디</th><th>만든 사람</th><th>AI 점수</th><th>별점</th><th>종합</th></tr></thead>
+        <tbody id="rank-body"></tbody>
+      </table>
+    </div>
+    <div class="panel rank-how">
+      <h3>종합 점수 계산법</h3>
+      <p>종합 = AI 점수 × 0.5 + 별점 평균 × 10 (각각 최대 50점, 합계 100점). 별점이 아직 없으면 AI 점수의 절반만 반영돼요.</p>
+    </div>
+  </main>
+  <footer class="footer">오늘의 코디 챌린지 · 옷장 속 아이템은 모두 이모지로 그렸어요</footer>
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/runway.js"></script>
+</body>
+</html>

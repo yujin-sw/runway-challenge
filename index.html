@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>홈 · 오늘의 코디 챌린지</title>
+  <meta name="description" content="상황에 맞는 코디를 완성하고 AI 스타일리스트의 평가를 받아 런웨이에 서는 패션 게임">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="nav__inner">
+      <a class="nav__brand" href="index.html">오늘의 코디 챌린지</a>
+      <nav><ul class="nav__links">
+        <li><a href="index.html" aria-current="page">홈</a></li>
+        <li><a href="game.html">코디하기</a></li>
+        <li><a href="runway.html">런웨이</a></li>
+        <li><a href="ranking.html">랭킹</a></li>
+      </ul></nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <h1>오늘 어디 가세요?<br>옷장은 제가 열어 둘게요.</h1>
+        <p class="lead">상황 카드를 뽑고, 옷장에서 아이템을 골라 코디를 완성하세요. AI 스타일리스트가 점수를 매기고, 마음에 들면 런웨이에 세워 다른 사람에게 별점을 받을 수 있어요.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="game.html">코디 시작하기</a>
+          <a class="btn" href="runway.html">런웨이 구경하기</a>
+        </div>
+      </div>
+      <div class="hero__stage">
+        <div class="runway-floor" style="width:100%;max-width:340px" id="hero-stage"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>이렇게 놀아요</h2>
+      <div class="steps">
+        <div class="panel"><span>1</span><h3>상황 카드 뽑기</h3><p>"비 오는 금요일 데이트"처럼 매번 다른 상황이 주어져요.</p></div>
+        <div class="panel"><span>2</span><h3>옷장에서 코디하기</h3><p>상의·하의·신발은 필수, 아우터와 소품은 선택이에요. 아바타에 바로 입혀 볼 수 있어요.</p></div>
+        <div class="panel"><span>3</span><h3>평가받고 런웨이 서기</h3><p>AI가 100점 만점으로 평가해요. 런웨이에 올리면 다른 방문자가 별점을 주고 랭킹에 반영돼요.</p></div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">오늘의 코디 챌린지 · 옷장 속 아이템은 모두 이모지로 그렸어요</footer>
+  <script src="js/data.js"></script>
+  <script>
+    // 홈 화면 마네킹: 매번 랜덤 코디를 입혀서 보여줍니다.
+    const r = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    document.getElementById('hero-stage').innerHTML = renderAvatar({
+      top: r(CLOSET.top.items), bottom: r(CLOSET.bottom.items), shoes: r(CLOSET.shoes.items),
+      outer: Math.random() > .5 ? r(CLOSET.outer.items) : null, acc: r(CLOSET.acc.items),
+    });
+  </script>
+</body>
+</html>
