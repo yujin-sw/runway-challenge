@@ -13,7 +13,7 @@ from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
 
-MODEL = "gemini-flash-lite-latest"
+MODEL = "gemini-flash-latest"
 TIMEOUT_MS = 25000
 
 SYSTEM_PROMPT = """당신은 '오늘의 코디 챌린지' 게임의 스타일리스트 '마담 룩'입니다.
@@ -72,7 +72,6 @@ class handler(BaseHTTPRequestHandler):
                     temperature=0.8,
                     max_output_tokens=400,
                     response_mime_type="application/json",
-                    thinking_config=types.ThinkingConfig(thinking_budget=0),
                 ),
             )
             text = resp.text or ""
