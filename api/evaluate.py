@@ -3,18 +3,18 @@ POST /api/evaluate
 입력: { "situation": "...", "items": ["상의: 흰색 기본 티셔츠", ...] }
 출력: { "score": 0~100, "fit": "한 줄 적합도", "comment": "스타일리스트 코멘트" }
 
-API 키는 환경 변수 GEMINI_API_KEY 로만 읽습니다. 코드에 절대 적지 마세요.
+Gemini REST API를 직접 호출합니다. 키는 환경 변수 GEMINI_API_KEY 로만 읽습니다.
 """
 import json
 import os
+import re
 from http.server import BaseHTTPRequestHandler
 
-from google import genai
-from google.genai import errors as genai_errors
-from google.genai import types
+import requests
 
 MODEL = "gemini-2.5-flash-lite"
-TIMEOUT_MS = 20000
+API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
+TIMEOUT_SEC = 20
 
 SYSTEM_PROMPT = """당신은 '오늘의 코디 챌린지' 게임의 스타일리스트 '마담 룩'입니다.
 말투는 짧고 유쾌하며, 칭찬과 지적을 한 문장씩 섞습니다.
@@ -25,7 +25,7 @@ SYSTEM_PROMPT = """당신은 '오늘의 코디 챌린지' 게임의 스타일리
 - 색 조합 30점: 색이 서로 어울리는가
 - 완성도 30점: 아우터·소품이 룩을 완성하는가, 과하지 않은가
 
-반드시 아래 JSON 형식으로만 답하세요.
+반드시 아래 JSON 형식으로만 답하세요. 다른 말이나 마크다운은 쓰지 마세요.
 {"score": 정수, "fit": "상황 적합도를 10자 내외로", "comment": "2문장 이내의 코멘트"}"""
 
 
@@ -53,48 +53,62 @@ class handler(BaseHTTPRequestHandler):
             return _send(self, 400, {"error": "상황과 아이템(최소 3개)을 보내 주세요."})
 
         # 2) 환경 변수 확인
-        api_key = os.environ.get("GEMINI_API_KEY")
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
         if not api_key:
             return _send(self, 500, {"error": "서버에 AI 키가 설정되지 않았어요. GEMINI_API_KEY를 확인해 주세요."})
 
-        # 3) Gemini 호출
+        # 3) Gemini REST 호출
         user_msg = f"상황: {situation}\n코디:\n" + "\n".join(f"- {i}" for i in items[:8])
+        payload = {
+            "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+            "contents": [{"role": "user", "parts": [{"text": user_msg}]}],
+            "generationConfig": {
+                "temperature": 0.8,
+                "maxOutputTokens": 400,
+                "responseMimeType": "application/json",
+            },
+        }
         try:
-            client = genai.Client(
-                api_key=api_key,
-                http_options=types.HttpOptions(timeout=TIMEOUT_MS),
+            res = requests.post(
+                API_URL,
+                params={"key": api_key},
+                json=payload,
+                timeout=TIMEOUT_SEC,
             )
-            resp = client.models.generate_content(
-                model=MODEL,
-                contents=user_msg,
-                config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                    temperature=0.8,
-                    max_output_tokens=400,
-                    response_mime_type="application/json",
-                ),
-            )
-            text = resp.text or ""
-        except genai_errors.APIError as e:
-            code = getattr(e, "code", None)
-            if code in (401, 403):
-                return _send(self, 502, {"error": "AI 키가 올바르지 않아요. 서버 설정의 GEMINI_API_KEY를 확인해 주세요."})
-            if code == 429:
-                return _send(self, 429, {"error": "무료 사용량을 모두 썼어요. 잠시 후 다시 시도해 주세요."})
-            return _send(self, 502, {"error": f"AI 서비스 오류({code})예요. 잠시 후 다시 시도해 주세요."})
-        except Exception as e:
-            if "timeout" in str(e).lower() or "deadline" in str(e).lower():
-                return _send(self, 504, {"error": "스타일리스트가 고민이 길어지고 있어요. 다시 시도해 주세요."})
-            return _send(self, 502, {"error": "스타일리스트가 잠시 자리를 비웠어요. 다시 시도해 주세요."})
+        except requests.Timeout:
+            return _send(self, 504, {"error": "스타일리스트가 고민이 길어지고 있어요. 다시 시도해 주세요."})
+        except requests.RequestException:
+            return _send(self, 502, {"error": "AI 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."})
 
-        # 4) JSON 파싱 (코드블록이 섞여 와도 처리)
-        clean = text.strip().replace("```json", "").replace("```", "").strip()
+        if res.status_code != 200:
+            try:
+                detail = res.json().get("error", {}).get("message", "")
+            except ValueError:
+                detail = res.text[:200]
+            print(f"[evaluate] Gemini {res.status_code}: {detail}")
+            if res.status_code in (401, 403):
+                return _send(self, 502, {"error": "AI 키가 올바르지 않아요. GEMINI_API_KEY를 확인해 주세요."})
+            if res.status_code == 429:
+                return _send(self, 429, {"error": "무료 사용량을 모두 썼어요. 잠시 후 다시 시도해 주세요."})
+            return _send(self, 502, {"error": f"AI 서비스 오류({res.status_code})예요. {detail[:80]}"})
+
+        # 4) 응답 텍스트 꺼내기
         try:
-            result = json.loads(clean)
+            text = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+        except (KeyError, IndexError, ValueError, TypeError):
+            print(f"[evaluate] 응답 구조 이상: {res.text[:300]}")
+            return _send(self, 502, {"error": "AI 답변을 읽지 못했어요. 한 번 더 시도해 주세요."})
+
+        # 5) JSON 파싱 (코드블록이나 앞뒤 말이 섞여 와도 처리)
+        clean = text.strip().replace("```json", "").replace("```", "").strip()
+        match = re.search(r"\{.*\}", clean, re.DOTALL)
+        try:
+            result = json.loads(match.group(0) if match else clean)
             score = max(0, min(100, int(result.get("score", 0))))
             fit = str(result.get("fit", "")).strip()[:40]
             comment = str(result.get("comment", "")).strip()[:300]
         except (ValueError, AttributeError, json.JSONDecodeError):
+            print(f"[evaluate] JSON 파싱 실패: {text[:300]}")
             return _send(self, 502, {"error": "AI 답변을 읽지 못했어요. 한 번 더 시도해 주세요."})
 
         return _send(self, 200, {"score": score, "fit": fit, "comment": comment})
