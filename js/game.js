@@ -44,8 +44,7 @@ function renderItems() {
   const chosen = state.look[state.category];
   els.items.innerHTML = cat.items.map((it) => `
     <button class="item" data-id="${it.id}" aria-pressed="${chosen?.id === it.id}">
-      <span>${it.emoji}</span>${it.name}
-      ${it.color ? `<i style="background:${it.color}"></i>` : ''}
+      <span class="item__icon">${renderItemIcon(state.category, it)}</span>${it.name}
     </button>`).join('');
 }
 
@@ -134,7 +133,7 @@ els.submitBtn.addEventListener('click', async () => {
       author: (els.author.value.trim() || '익명').slice(0, 20),
       situation: state.situation.title,
       situationEmoji: state.situation.emoji,
-      look: Object.fromEntries(Object.entries(state.look).map(([k, v]) => [k, v ? { emoji: v.emoji, name: v.name, color: v.color || null } : null])),
+      look: Object.fromEntries(Object.entries(state.look).map(([k, v]) => [k, v ? { emoji: v.emoji, name: v.name, color: v.color || null, kind: v.kind || null } : null])),
       aiScore: state.verdict.score,
       aiComment: state.verdict.comment,
     };
