@@ -12,7 +12,7 @@ from http.server import BaseHTTPRequestHandler
 
 import requests
 
-MODEL = "gemini-2.5-flash-lite"
+MODEL = "gemini-3.5-flash-lite"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 TIMEOUT_SEC = 20
 
